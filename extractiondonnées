@@ -1,5 +1,5 @@
 def traiterCR(fichier):
-	
+	""" premier traitement de forme afin d'obtenir un fichier "propre" sans lignes blanches """
 	fichier_nouveau = fichier[0:5]
 	lines = []
 
@@ -20,6 +20,7 @@ def traiterCR(fichier):
 				chaine = f.readlines()
 				
 def extractionVote(chaine):
+	"""¨Passage de la "liste" de ligne en revue pour relever tous les votes. Pour l'instant c'est juste visible avec les prints successifs, l'objectif est évidemment de créer les données proprement à la place. """
 				i = 0
 				voteTotal = 0
 				voteDoublon = 0
@@ -47,6 +48,7 @@ def extractionVote(chaine):
 					i = i+1
 
 def initif():
+	"""fonction simple pour faire les deux au dessus en une, bonjour la fainéantise (aussi sur le nom)"""
 	fichier = input("Nom du fichier à traiter (vérifiez bien le répertoire actif et n'oubliez pas l'extension) ?\n")
 
 	chaine = traiterCR(fichier)
