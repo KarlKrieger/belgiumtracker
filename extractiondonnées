@@ -1,0 +1,54 @@
+def traiterCR(fichier):
+	
+	fichier_nouveau = fichier[0:5]
+	lines = []
+
+	with open(fichier, "r") as f:
+		line = f.readlines()
+
+	for char in line:
+			if (char != "\n" and
+			char != " \n" and
+			char != "\t\n"):
+				lines.append(char)
+
+	with open(fichier_nouveau, "a") as f:
+			for char in lines:
+				f.write(char)
+	
+	return = with open(fichier_nouveau, "r") as f:
+				chaine = f.readlines()
+				
+def extractionVote(chaine):
+				i = 0
+				voteTotal = 0
+				voteDoublon = 0
+				for ligne in chaine:
+					if ligne[0:14] == "(Stemming/vote":
+						try:
+							ligneVote = chaine[i]
+							try:
+								nbVote = int(ligneVote[15:17])
+							except ValueError:
+								nbVote = int(ligneVote[15:16])
+							ligneOui = chaine[i+2]
+							nbOui = int(ligneOui[0:3])
+							ligneNon = chaine[i+5]
+							nbNon = int(ligneNon[0:3])
+							ligneAbs = chaine[i+8]
+							nbAbs = int(ligneAbs[0:3])
+							lignetotal = chaine[i+11]
+							nbTotal = int(lignetotal[0:3])
+							voteTotal = voteTotal+1
+							print("Vote n°", nbVote, "ayant reçu", nbOui, "de OUI,", nbNon, "de NON et", nbAbs, "d'abstention, pour un total de", nbTotal, "votes")
+						except ValueError:
+							voteDoublon = voteDoublon+1
+							print("Vote doublon du précédent.")
+					i = i+1
+
+def initif():
+	fichier = input("Nom du fichier à traiter (vérifiez bien le répertoire actif et n'oubliez pas l'extension) ?\n")
+
+	chaine = traiterCR(fichier)
+	
+	extractionVote(chaine)
