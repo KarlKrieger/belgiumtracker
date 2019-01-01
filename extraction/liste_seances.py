@@ -16,7 +16,7 @@ N_LEGISLATURE = 54
 
 # Récupération du code source de la page
 
-url = 'http://www.lachambre.be/kvvcr/showpage.cfm?section=/cricra&language=fr&cfm=dcricra.cfm?type=plen&cricra=cri&count=all&legislat=54'
+url = 'http://www.lachambre.be/kvvcr/showpage.cfm?section=/cricra&language=fr&cfm=dcricra.cfm?type=plen&cricra=cri&count=all&legislat=' + str(N_LEGISLATURE)
 html_doc = urllib.request.urlopen(url)
 
 soup = BeautifulSoup(html_doc, 'html.parser')
@@ -60,11 +60,9 @@ for link in soup.find_all('tr', valign='top', limit=NB_MAX):
         line = " ".join(line.string.split())
         try:
             jour, moment = line.split(' ',1)
-            break
         except ValueError:
-            print('ERROR')
-            moment = ''
-            jour = ''
+            jour = 'jour'
+            moment = 'journée'
         print(str('Moment:      ') + str(moment) + '\n' + str('Jour:        ' + str(jour)))
         record = record + moment + ','
 
