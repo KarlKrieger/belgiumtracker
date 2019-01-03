@@ -7,6 +7,8 @@
 
 from bs4 import BeautifulSoup
 import urllib
+# import warnings
+# warnings.filterwarnings("ignore", category=UserWarning, module='bs4')
 
 url = 'http://www.lachambre.be/kvvcr/showpage.cfm?section=/depute&language=fr&cfm=cvlist54.cfm?legis=54&today=y'
 html_doc = urllib.request.urlopen(url)
@@ -18,6 +20,26 @@ niveau_max = BeautifulSoup(html_doc, 'html.parser')
 fichier = 'seances_deputes' + '.csv'
 doc = open(fichier, 'w')
 doc.write('name,first_name,last_name,parti_id,date_naissance,date_deces,genre,langue,site,email,photo' + '\n')
+
+# Fouille les données de la page du député
+def fouille_depute(url):
+    code_depute = BeautifulSoup(url, 'html.parser')
+    for niveau_0 in code_depute.find_all('img', border='1', alt='Picture'):
+        picture = 'http://www.lachambre.be' + niveau_0.get('src')
+        print('Photo:    ' + picture)
+    print(url)
+    for niveau_0 in code_depute.find_all('td', limit=1):
+        print('Langue:   ' + 'Introuvable')
+        for niveau_1 in niveau_0.find_all('i', limit=1):
+            print('Langue:   ' + niveau_1.string)
+            liste_mandats = []
+            for niveau_0 in code_depute.find_all('div', id='story'):
+                for niveau_1 in niveau_0.find_all('form', id='myform'):
+                    for niveau_2 in niveau_1.find_all('div', id='section'):
+                        for niveau_3 in niveau_2.find_all('div', 'menu'):
+                            for niveau_4 in niveau_3.find_all('a'):
+                                liste_mandats.append(niveau_4.string)
+            print ('Mandats:  ' + str(liste_mandats))
 
 print('-------------------------------------------')
 
@@ -67,26 +89,9 @@ for niveau_0 in niveau_max.find_all('tr', limit=NB_DEPUTE):
             except AttributeError:
                 text = 'Pas de site web'
             print('Site:     ' + str(text))
+    
+    fouille_depute(url_depute)
 
-                    # Fouille les données de la page du député 
-     
-    print(url_depute)
-    code_depute = BeautifulSoup(url_depute, 'html.parser')
-    for niveau_0 in code_depute.find_all('img', border='1', alt='Picture'):
-        picture = 'http://www.lachambre.be' + niveau_0.get('src')
-        print('Photo:    ' + picture)
-    for niveau_0 in code_depute.find_all('td', limit=1):
-        print('Langue:   ' + 'Introuvable')
-        for niveau_1 in niveau_0.find_all('i', limit=1):
-            print('Langue:   ' + niveau_1.string)
-            liste_mandats = []
-            for niveau_0 in code_depute.find_all('div', id='story'):
-                for niveau_1 in niveau_0.find_all('form', id='myform'):
-                    for niveau_2 in niveau_1.find_all('div', id='section'):
-                        for niveau_3 in niveau_2.find_all('div', 'menu'):
-                            for niveau_4 in niveau_3.find_all('a'):
-                                liste_mandats.append(niveau_4.string)
-            print ('Mandats:  ' + str(liste_mandats))
     print('---------------------------------------')
 
 doc.close
