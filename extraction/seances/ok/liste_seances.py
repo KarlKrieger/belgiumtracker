@@ -19,7 +19,7 @@ N_LEGISLATURE = 54
 url = 'http://www.lachambre.be/kvvcr/showpage.cfm?section=/cricra&language=fr&cfm=dcricra.cfm?type=plen&cricra=cri&count=all&legislat=' + str(N_LEGISLATURE)
 html_doc = urllib.request.urlopen(url)
 
-soup = BeautifulSoup(html_doc, 'html.parser')
+soup = BeautifulSoup(html_doc, 'lxml')
 fichier = 'seances_legislature_' + str(N_LEGISLATURE) + '.csv'
 doc = open(fichier, 'w')
 doc.write('name,legislature_id,date,moment,approuve' + '\n')
@@ -79,7 +79,7 @@ for link in soup.find_all('tr', valign='top', limit=NB_MAX):
         line = " ".join(line.string.split())
         if line == 'version définitive':
             version = 'True (définitive)'
-            aprouve = 'true'
+            approuve = 'true'
         else:
             version = 'False (provisoire)'
             approuve = 'false'
