@@ -67,7 +67,18 @@ def extractionVote(chaine):
     
     i = 0
     voteTotal = 0
-    voteDoublon = 0
+    voteDoublon = 1
+    nbDoublon = 0
+
+    nbVote = 0
+    nbOui = 0
+    nbNon = 0
+    nbAbs = 0
+    nbTotal = 0
+    nomOUI = ''
+    nomNON = ''
+    nomABS = ''
+
     for ligne in chaine:
         if ligne[0:14] == "(Stemming/vote":
             try:
@@ -91,8 +102,9 @@ def extractionVote(chaine):
                 vote_fichier = 'votes/vote_' + str(nbVote) + '.txt'
                 doc = open(vote_fichier, 'w')
                 doc.write('Type de vote:' + '\n')
-                data = "Vote n°" + str(nbVote) + " ayant reçu " + str(nbOui) + " OUI, " + str(nbNon) + " NON et " + str(nbAbs) + " abstention, pour un total de " + str(nbTotal) + " votes." + "\n"
-                print (data)
+                data = "Vote n°" + str(nbVote) + " ayant reçu " + str(nbOui) + " OUI, " + str(nbNon) + " NON et " + str(nbAbs) + " abstention, pour un total de " + str(nbTotal) + " votes."
+#               print (data)
+                data = data + '\n'
                 doc.write(data)
 
                 doc.write('Résultat du vote:' + '\n')
@@ -103,16 +115,40 @@ def extractionVote(chaine):
                 data = "Personnes ayant voté ABSTENTION : " + str(nomABS)
                 doc.write(data)
                 doc.close
+                voteDoublon = 0
             except ValueError:
-                voteDoublon = voteDoublon+1
-                # print("Vote doublon du précédent.")
+                nbDoublon = nbDoublon + 1
+                voteDoublon = voteDoublon + 1
+                data = "Vote n°" + str(nbVote) + '_' + str(voteDoublon) + " ayant reçu " + str(nbOui) + " OUI, " + str(nbNon) + " NON et " + str(nbAbs) + " abstention, pour un total de " + str(nbTotal) + " votes."
+                print("Vote doublon." + data)
+                vote_fichier = 'votes/vote_' + str(nbVote) + '_' + str(voteDoublon) + '.txt'
+                doc = open(vote_fichier, 'w')
+                doc.write('Type de vote:' + '\n')
+                data = "Vote n°" + str(nbVote) + " ayant reçu " + str(nbOui) + " OUI, " + str(nbNon) + " NON et " + str(nbAbs) + " abstention, pour un total de " + str(nbTotal) + " votes."
+#               print (data)
+                data = data + '\n'
+                doc.write(data)
+
+                doc.write('Résultat du vote:' + '\n')
+                data = "Personnes ayant voté POUR : " + str(nomOUI) + "\n"
+                doc.write(data)
+                data = "Personnes ayant voté CONTRE : " + str(nomNON) + "\n"
+                doc.write(data)
+                data = "Personnes ayant voté ABSTENTION : " + str(nomABS)
+                doc.write(data)
+                doc.close
         i = i+1
+    return(nbVote, nbDoublon)
 
 def initif():
+    internet = ''
+
     lien = 'exemple.txt'
 
     chaine = traiterCR(lien)
     
-    extractionVote(chaine)
+    nbVote, nbDoublon = extractionVote(chaine)
+
+    print ('Il y a eu dans cette séance ' + str(nbVote) + ' votes et ' + str(nbDoublon) + ' doublons.')
 
 initif()

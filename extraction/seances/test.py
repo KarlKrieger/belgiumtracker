@@ -1,137 +1,99 @@
-#!/usr/bin/env python
-# test.py
-import re
+# -*- coding: utf-8 -*
 
-from bs4 import BeautifulSoup
-from bs4 import SoupStrainer
-
+from bs4 import BeautifulSoup, SoupStrainer
 import urllib
 
-url = 'http://www.lachambre.be/doc/PCRI/html/54/ip264x.html'
+##################
+#                #
+#     TO DO      #
+#                #
+##################
+#
+# 1. Gérer la récupération du numéro des votes et du vote annulé
+# 2. Gérer la concaténation de la liste des députés. Attention qu'il faut rajouter des espaces en fin de ligne.
+#
 
+# Pour tester, faire varier le numéro de la séance
+SEANCE = '262'
+
+url = 'http://www.lachambre.be/doc/PCRI/html/54/ip'+ str(SEANCE) + 'x.html'
+fichier = 'seance_' + str(SEANCE) +'.txt'
 html_doc = urllib.request.urlopen(url)
 
-soup = BeautifulSoup(html_doc, 'lxml', parse_only=SoupStrainer('body')).get_text()
+# Récupération uniquement des données contenues dans le <body> de la page, car il y a plus haut 1000 lignes de css en commentaire dans le code. -_-
+doc = BeautifulSoup(html_doc, 'lxml', parse_only=SoupStrainer('body')).text
 
-fichier = open('seance_54_264.txt', 'w')
+# Retire les lignes blanches du fichier
+def remove_empty_lines(filename):
+    with open(filename) as f:
+        lines = f.readlines()
+    with open(filename, 'w') as f:
+        lines = filter(lambda x: x.strip(), lines)
+        f.writelines(lines)
 
-fichier.write(soup)
-fichier.close
+# Ecrit le code html dans le fichier
+with open (fichier, 'w') as f:
+    f.write(str(doc))
 
-def traiterCR(fichier):
-    """ premier traitement de forme afin d'obtenir un fichier "propre" sans lignes blanches """
-    
-    
-    fichier_nouveau = fichier[0:5]
-    lines = []
+# Lance le retrait des lignes blanches
+remove_empty_lines(fichier)
 
-    with open(fichier, "r") as f:
-        line = f.readlines()
+# Phrase à rechercher pour localiser les votes en fin de fichier
+vote = 'Naamstemming: '
 
-    for char in line:
-            if (char != "\n" and
-            char != " \n" and
-            char != "\t\n"):
-                lines.append(char)
+ligne_votes = []
 
-    with open(fichier_nouveau, "w") as f:
-            for char in lines:
-                f.write(char)
-    
-    with open(fichier_nouveau, "r") as f:
-        chaine = f.readlines()
-    
-    print('TraiterCR is ok.')
+# Récupération du numéro de la ligne du début du vote
+with open(fichier, 'r') as f:
+    num = 0
+    for num, ligne in enumerate(f, 1):
+        if vote in ligne:
+            ligne_votes.append(num)
+    ligne_votes.append(num)
 
-    return chaine
+liste_votes = []
 
-    
-def obtenirNumero(vote):
-    if vote > 9:
-        numero = str(vote)
-    else:
-        numero = "0" + str(vote)
-    return numero
+# Récupération du reste du vote
+with open(fichier, 'r') as f: 
+    lines = f.readlines()
+    # Boucle entre le début du vote et le début du vote suivant
+    for compteur in range(0, len(ligne_votes) - 1):
+        debut = ligne_votes[compteur] -1
+        fin = ligne_votes[compteur + 1] -2
+        temp = []
+        # Suppression des '\n' et '\xa0'
+        for i in range(debut, fin):
+            data = lines[i].rstrip('\n')
+            data = lines[i].rstrip()
+            temp.append(data)
 
-    
-def extractionNom(vote, chaine, oui, non, abs):
-
-    titre = "Vote nominatif - Naamstemming: 0" + obtenirNumero(vote)
-    i = 0
-    
-    for ligne in chaine:
-        if ligne[0:34] == titre:
-            if oui != 0:
-                iOui = i+4
-            else:
-                iOui = i+3
-            
-            if non != 0:
-                iNon = iOui+4
-            else:
-                iNon = iOui+3
-                
-            if abs != 0:
-                iAbs = iNon+4
-            else:
-                iAbs = iNon+3
-            print('OK !')
-            nomOUI = chaine[iOui].split(", ")
-            nomNON = chaine[iNon].split(", ")
-            nomABS = chaine[iAbs].split(", ")
-        i +=1
-
-    return nomOUI, nomNON, nomABS
-                
-def extractionVote(chaine):
-    
-    i = 0
-    voteTotal = 0
-    voteDoublon = 0
-    for ligne in chaine:
-        if ligne[0:14] == "(Stemming/vote":
-            try:
-                ligneVote = chaine[i]
-                try:
-                    nbVote = int(ligneVote[15:17])
-                except ValueError:
-                    nbVote = int(ligneVote[15:16])
-                ligneOui = chaine[i+2]
-                nbOui = int(ligneOui[0:3])
-                ligneNon = chaine[i+5]
-                nbNon = int(ligneNon[0:3])
-                ligneAbs = chaine[i+8]
-                nbAbs = int(ligneAbs[0:3])
-                lignetotal = chaine[i+11]
-                nomOUI, nomNON, nomABS = extractionNom(nbVote, chaine, nbOui, nbNon, nbAbs)    
-                nbTotal = int(lignetotal[0:3])
-                voteTotal = voteTotal+1
-                if nbVote < 10:
-                    nbVote = '0' + str(nbVote)
-                vote_fichier = 'votes/vote_' + str(nbVote) + '.txt'
-                doc = open(vote_fichier, 'w')
-                doc.write('Type de vote:' + '\n')
-                data = "Vote n°" + str(nbVote) + " ayant reçu " + str(nbOui) + " OUI, " + str(nbNon) + " NON et " + str(nbAbs) + " abstention, pour un total de " + str(nbTotal) + " votes." + "\n"
-                print (data)
-                doc.write(data)
-
-                doc.write('Résultat du vote:' + '\n')
-                data = "Personnes ayant voté POUR : " + str(nomOUI) + "\n"
-                doc.write(data)
-                data = "Personnes ayant voté CONTRE : " + str(nomNON) + "\n"
-                doc.write(data)
-                data = "Personnes ayant voté ABSTENTION : " + str(nomABS)
-                doc.write(data)
-            except ValueError:
-                voteDoublon = voteDoublon+1
-                # print("Vote doublon du précédent.")
-        i = i+1
-
-def initif():
-    lien = 'seance_54_264.txt'
-
-    chaine = traiterCR(lien)
-    
-    extractionVote(chaine)
-
-initif()
+        #########
+        # TO DO #
+        #########
+        # Récupérer uniquement les 3 derniers caractères du temp [0] qui donne le numéro du vote.
+        # Gérer le vote numéro 37 qui a été annulé
+        print(temp[0])
+        
+        #########
+        # TO DO #
+        #########
+        # Il faut concaténer les députés dans le même élément de la liste car les lignes ont été découpées au moment de la récupération du code html.
+        # Pour le moment, le code est foireux. Il met tout dans la case des OUI.
+        # Ne pas oublier de rajouter des espaces en fin de ligne pour ne pas joindre noms et prénoms.
+        resultats = []
+        resultats.append(temp.index('Oui'))
+        resultats.append(temp.index('Non'))
+        resultats.append(temp.index('Abstentions'))
+        
+        # REGROUPER PAR VOTE
+        vote = []
+        for i in temp:
+            # OUI
+            vote.append(temp[resultats[0]])
+            vote.append(temp[resultats[0]+1])
+            j = 2
+            while j < resultats[1]:
+                data += ' ' + str(temp[resultats[0]+j])
+                j += 1
+            vote.append(data)
+        liste_votes.append(vote)
