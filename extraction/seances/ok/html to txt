@@ -1,0 +1,61 @@
+from bs4 import BeautifulSoup as bs
+from bs4 import SoupStrainer
+import urllib
+import urllib.request
+import re
+
+url = 'http://www.lachambre.be/doc/PCRI/html/54/ip264x.html'
+html_doc = urllib.request.urlopen(url)
+soup = bs(html_doc, parse_only=SoupStrainer('body'))
+soup_decode = soup.get_text()
+soup_decode = soup_decode.replace("\xa0"," ")
+soup_decode = soup_decode.splitlines()
+
+def isFill(objet):
+	if (objet != "\n" and
+	    objet != " \n" and
+	    objet != " " and
+	    objet != "\t\n"):
+		return True
+	else:
+		return False
+	
+def concatener(objet):
+	i = 0
+	lines = []
+	taille = len(objet)
+	while i < taille:
+		if isFill(objet[i]):
+			string = objet[i]
+			if i + 1 < taille:
+				i = i + 1
+				while isFill(objet[i]):
+					string = string + " " + objet[i]
+					if i + 1 < taille:
+						i = i + 1
+					else:
+						break
+				lines.append(string)
+				del string
+			else:
+				i = i + 1
+		else:
+			i = i + 1
+	return lines
+  
+def traiter_site(site,fichier):
+  url = site
+  html_doc = urllib.request.urlopen(url)
+  soup = bs(html_doc, parse_only=SoupStrainer('body'))
+  soup_texte = soup.get_text()
+  soup_texte_traite = soup_texte.replace("\xa0"," ")
+  soup_decode = soup_texte_traite.splitlines()
+  texte_final = concatener(soup_decode)
+  
+  fichier = str(fichier) + ".txt"
+  
+  with open(fichier,"w") as f:
+    for line in texte_final:
+      f.write(line)
+   
+  
